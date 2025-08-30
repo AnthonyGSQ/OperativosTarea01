@@ -1,0 +1,24 @@
+# Compilados y binarios
+bin/
+*.o
+*.out
+*.exe
+
+# Archivos temporales
+*.log
+*.tmp
+*.swp
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración de editores
+.vscode/
+.idea/
+
+# Carpeta que sera generada conforme el usuario ingrese dibujos ascii
+asciiData/
+
+# Otros
+*.bak

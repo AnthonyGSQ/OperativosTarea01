@@ -1,1 +1,0 @@
-= Tarea01 Sistema de archivos indexados para dibujos ascii

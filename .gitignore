@@ -20,5 +20,11 @@ Thumbs.db
 # Carpeta que sera generada conforme el usuario ingrese dibujos ascii
 asciiData/
 
+# Archivos de Nix y cache
+.ccls-cache/
+*.nix
+nix/
+.nix-*
+
 # Otros
 *.bak

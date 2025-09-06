@@ -1,56 +1,39 @@
-
 #ifndef BLOCKHANDLER_HPP
 #define BLOCKHANDLER_HPP
 
 #include "BlockStructures.hpp"
-#include <vector>
-
-
-// Enum to identify block types in the system
-enum class BlockType { Directory, Node, Data };
-
 
 class BlockHandler {
 private:
-    // MetaDataBlock: Stores global information about the file system
-    // (only one per system)
-    MetaDataBlock metaDataBlock;
-
-    // DirectoryBlocks: Each block contains a map of drawing names to their
-    // respective node block indices
-    std::vector<DirectoryBlock> directoryBlocks;
-
-    // NodeBlocks: Each block contains references to the data blocks that
-    // store the ASCII drawing
-    std::vector<NodeBlock> nodeBlocks;
-
-    // DataBlocks: Each block stores a fixed-size portion of an ASCII drawing
-    std::vector<DataBlock> dataBlocks;
-
-    // Function that would create all the neccesary blocks
-    bool init();
-    // Saves all blocks to a .dat file (binary format)
-    bool saveToFile(const std::string& filename);
-
-    // Loads all blocks from a .dat file (binary format)
-    bool loadFromFile(const std::string& filename);
+    const char* filename;
+    int totalBlocks;
+    GenericalBlock* blocks;  // Array de GenericalBlock que contiene todos los bloques
 
 public:
-    // Constructor: Initializes all necessary blocks when the handler is created
-    BlockHandler();
-
-    // Destructor: Cleans up resources used by the block handler
+    BlockHandler(const char* filename, int totalBlocks);
     ~BlockHandler();
 
-    // Setters: Update a block at a given position (by value)
-    void setDirectoryBlock(int position, const DirectoryBlock& block);
-    void setNodeBlock(int position, const NodeBlock& block);
-    void setDataBlock(int position, const DataBlock& block);
+    // setters to create all the type of blocks of the system
+    int setMetaDataBlock();
+    int setDirectoryBlock();
+    int setNodeBlock(int asciiSize, int permissions);
+    int setDataBlock(const char* data, int dataSize);
 
-    // Getters: Retrieve a block at a given position
-    DirectoryBlock getDirectoryBlock(int position) const;
-    NodeBlock getNodeBlock(int position) const;
-    DataBlock getDataBlock(int position) const;
+    // get the block of a specific position;
+    GenericalBlock* getBlock(int position);
+
+    // function to read all the data from a specific block
+    int* getBlockData(int position);
+    // function that returns the first free block finded in the bitmap
+    int findEmptyBlockPosition();
+    // function that returns the bitmap size
+    int getTotalBlocks() const { return totalBlocks; }
+
+    // this function saves the current status of the file system in a .dat file
+    bool saveToFile();
+    // this function allows the system to return to the status saved in the .dat
+    // file
+    bool loadFromFile();
 };
 
 #endif

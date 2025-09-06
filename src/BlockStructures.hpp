@@ -1,35 +1,52 @@
 #ifndef BLOCKSTRUCTURES_HPP
 #define BLOCKSTRUCTURES_HPP
-
-#include <array>
-#include <string>
-#include <vector>
 #include <map>
+#include <string>
 
 constexpr int BLOCK_SIZE = 256;
+
 struct MetaDataBlock {
     int totalSpace;
     int blockSize = BLOCK_SIZE;
-    int blockCount;
     int totalFreeBlocks;
-    std::string SADAversion;
-    std::vector<int> bitmap;
-    std::string creationDate;
+    // array with all the blocks in the file system
+    int* unit;
 };
 
 struct DirectoryBlock {
+    // amounth of different Node Blocks (ascii draws)
+    int entryCount;
+    // map with all the ascii draws and his respective Node Block index
     std::map<std::string, int> directoryMap;
-    std::string creationDate;
 };
+
 struct NodeBlock {
-    std::vector<int> asciiParts;
     int asciiSize;
     // 1 for read, 2 for write permissions
     int permissions;
-    std::string creationDate;
+    // array with all the ascii parts index of the unit
+    int* asciiParts;
 };
+
 struct DataBlock {
-    std::array<char, BLOCK_SIZE> data;
+    // when the user ask to see the content of one ascii draw, this string will
+    // have the corresponding ascii part of this data block
+    std::string content;
+};
+
+enum class BlockType { Empty, MetaData, Directory, Node, Data };
+
+// this struct exist because for the array we need a generical type of block
+struct GenericalBlock {
+    BlockType type;
+    union {
+        MetaDataBlock metaData;
+        DirectoryBlock directory;
+        NodeBlock node;
+        DataBlock data;
+    } content;
+    
+    GenericalBlock() : type(BlockType::Empty) {}
 };
 
 #endif

@@ -25,7 +25,8 @@ BlockHandler::~BlockHandler() {
     for (int i = 0; i < totalBlocks; ++i) {
         switch (blocks[i].type) {
             case BlockType::MetaData:
-                delete[] blocks[i].content.metaData->bitmap; // Liberar bitmap
+                // free bitmap
+                delete[] blocks[i].content.metaData->bitmap;
                 delete blocks[i].content.metaData;
                 break;
             case BlockType::Directory:

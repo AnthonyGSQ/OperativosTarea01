@@ -6,7 +6,7 @@
 constexpr int BLOCK_SIZE = 256;
 
 struct MetaDataBlock {
-    int totalSpace;
+    int totalBlocks;
     int blockSize = BLOCK_SIZE;
     int totalFreeBlocks;
     // array with all the blocks in the file system (forward declaration)

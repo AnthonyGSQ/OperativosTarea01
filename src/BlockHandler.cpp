@@ -25,6 +25,7 @@ BlockHandler::~BlockHandler() {
     for (int i = 0; i < totalBlocks; ++i) {
         switch (blocks[i].type) {
             case BlockType::MetaData:
+                delete[] blocks[i].content.metaData->bitmap; // Liberar bitmap
                 delete blocks[i].content.metaData;
                 break;
             case BlockType::Directory:
@@ -63,10 +64,19 @@ int BlockHandler::setMetaDataBlock() {
     if (totalBlocks > 0) {
         blocks[0].type = BlockType::MetaData;
         blocks[0].content.metaData = new MetaDataBlock();
-        blocks[0].content.metaData->totalSpace = totalBlocks;
+        blocks[0].content.metaData->totalBlocks = totalBlocks;
         blocks[0].content.metaData->blockSize = BLOCK_SIZE;
         blocks[0].content.metaData->totalFreeBlocks = totalBlocks - 1;
         blocks[0].content.metaData->unit = static_cast<void*>(blocks);
+        
+        // Inicializar el bitmap
+        blocks[0].content.metaData->bitmap = new int[totalBlocks];
+        for (int i = 0; i < totalBlocks; ++i) {
+            blocks[0].content.metaData->bitmap[i] = 0;
+        }
+        // position of the metaData block
+        blocks[0].content.metaData->bitmap[0] = 1;
+        
         return 0;
     }
     return -1;
@@ -79,6 +89,10 @@ int BlockHandler::setDirectoryBlock() {
     blocks[pos].type = BlockType::Directory;
     blocks[pos].content.directory = new DirectoryBlock();
     blocks[pos].content.directory->entryCount = 0;
+    
+    // mark the current position in the bitmap as busy
+    blocks[0].content.metaData->bitmap[pos] = 1;
+    blocks[0].content.metaData->totalFreeBlocks--;
     
     return pos;
 }
@@ -93,6 +107,9 @@ int BlockHandler::setNodeBlock(int asciiSize, int permissions) {
     blocks[pos].content.node->permissions = permissions;
     blocks[pos].content.node->asciiParts = nullptr;
     
+    blocks[0].content.metaData->bitmap[pos] = 1; // mark as busy
+    blocks[0].content.metaData->totalFreeBlocks--;
+    
     return pos;
 }
 
@@ -103,6 +120,9 @@ int BlockHandler::setDataBlock(const char* data, int dataSize) {
     blocks[pos].type = BlockType::Data;
     blocks[pos].content.data = new DataBlock();
     blocks[pos].content.data->content = std::string(data, dataSize);
+    
+    blocks[0].content.metaData->bitmap[pos] = 1; // mark as busy
+    blocks[0].content.metaData->totalFreeBlocks--;
     
     return pos;
 }
@@ -155,7 +175,7 @@ bool BlockHandler::freeDataBlock(int position) {
     for (int i = 0; i < totalBlocks; ++i) {
         if (blocks[i].type == BlockType::MetaData) {
             blocks[i].content.metaData->bitmap[position] = 0;
-            break;  // Romper el ciclo una vez encontrado
+            break;
         }
     }    
     return true;

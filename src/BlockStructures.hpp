@@ -9,8 +9,10 @@ struct MetaDataBlock {
     int totalSpace;
     int blockSize = BLOCK_SIZE;
     int totalFreeBlocks;
-    // array with all the blocks in the file system
-    int* unit;
+    // array with all the blocks in the file system (forward declaration)
+    void* unit;  // Será un puntero a GenericalBlock*
+    // map that indicates which blocks are used and which not (0 = free, 1 = used)
+    int* bitmap;
 };
 
 struct DirectoryBlock {
@@ -40,13 +42,11 @@ enum class BlockType { Empty, MetaData, Directory, Node, Data };
 struct GenericalBlock {
     BlockType type;
     union {
-        MetaDataBlock metaData;
-        DirectoryBlock directory;
-        NodeBlock node;
-        DataBlock data;
-    } content;
-    
-    GenericalBlock() : type(BlockType::Empty) {}
+        MetaDataBlock* metaData;
+        DirectoryBlock* directory;
+        NodeBlock* node;
+        DataBlock* data;
+    } content;  
 };
 
 #endif

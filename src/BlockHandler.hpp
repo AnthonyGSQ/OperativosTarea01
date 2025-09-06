@@ -1,13 +1,16 @@
 #ifndef BLOCKHANDLER_HPP
 #define BLOCKHANDLER_HPP
 
+#include <string>
+#include <array>
 #include "BlockStructures.hpp"
 
 class BlockHandler {
 private:
     const char* filename;
     int totalBlocks;
-    GenericalBlock* blocks;  // Array de GenericalBlock que contiene todos los bloques
+    // array with all the blocks of the file system
+    GenericalBlock* blocks;
 
 public:
     BlockHandler(const char* filename, int totalBlocks);
@@ -34,6 +37,11 @@ public:
     // this function allows the system to return to the status saved in the .dat
     // file
     bool loadFromFile();
+    // print all the type blocks in order
+    void printAllBlocks();
+    // free a specific block, once it its free, the metaData block update his
+    // bitmap to show the bloc
+    bool freeDataBlock(int position);
 };
 
 #endif

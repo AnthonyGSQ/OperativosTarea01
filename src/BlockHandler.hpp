@@ -34,14 +34,18 @@ public:
 
     // this function saves the current status of the file system in a .dat file
     bool saveToFile();
+
     // this function allows the system to return to the status saved in the .dat
     // file
     bool loadFromFile();
+
     // print all the type blocks in order
     void printAllBlocks();
+
     // free a specific block, once it its free, the metaData block update his
     // bitmap to show the bloc
     bool freeDataBlock(int position);
+    bool freeNodeBlock(int position);
 };
 
 #endif

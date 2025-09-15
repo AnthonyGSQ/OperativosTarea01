@@ -1,7 +1,5 @@
 #pragma once
 
-#include <map>
-#include <vector>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -14,7 +12,10 @@ using std::string, std::cout, std::cin, std::endl;
 class Filesystem
 {
 private:
-   GenericalBlock* blocks;
+   BlockHandler* files; // Blockhandler object to manage files internally
+
+   std::ifstream readDisk; // file stream for operations that need to read from the disk
+   std::ofstream writeDisk; // file stream for operations that need to write to the disk
 
 public:
    /**
@@ -23,13 +24,38 @@ public:
     * @param disk which disk will be accessed
     */
    Filesystem(string disk);
+
    /**
     * @brief Creates a new disk of specified size
     * 
     * @param size Size of disk to be created
+    * @param path path to the disk file
     */
-   Filesystem(int size);
+   Filesystem(string path, int size);
+
    ~Filesystem();
 
-   int CreateFile(string pName, string pContent);
+   /**
+    * @brief Creates a file within the disk.
+    * 
+    * @param pName file name
+    * @param pContent content of the file
+    * @return -1 on failure. Returns amount of blocks allocated for file otherwise. Including nodes.
+    */
+   int createFile(string pName, string pContent);
+
+   /**
+    * @brief Deletes the specified file.
+    * 
+    * @param pName 
+    * @return -1 on failure and 0 on success.
+    */
+   int deleteFile(string pName);
+
+   /**
+    * @brief prints a given file
+    * 
+    * @param pName name of the file within the disk
+    */
+   void print(string pName);
 };

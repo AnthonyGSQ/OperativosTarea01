@@ -18,6 +18,7 @@ BlockHandler::BlockHandler(const char* filename, int totalBlocks) {
     // since this is the constructor, we create the metaData block from the
     // start
     setMetaDataBlock();
+    setDirectoryBlock();
 }
 
 BlockHandler::~BlockHandler() {
@@ -33,6 +34,7 @@ BlockHandler::~BlockHandler() {
                 delete blocks[i].content.directory;
                 break;
             case BlockType::Node:
+                delete[] blocks[i].content.node->asciiParts;
                 delete blocks[i].content.node;
                 break;
             case BlockType::Data:
@@ -106,7 +108,7 @@ int BlockHandler::setNodeBlock(int asciiSize, int permissions) {
     blocks[pos].content.node = new NodeBlock();
     blocks[pos].content.node->asciiSize = asciiSize;
     blocks[pos].content.node->permissions = permissions;
-    blocks[pos].content.node->asciiParts = nullptr;
+    blocks[pos].content.node->asciiParts = new int[asciiSize/BLOCK_SIZE + (asciiSize%BLOCK_SIZE != 0)]; // In this case asciiSize/BLOCK_SIZE + (asciiSize%BLOCK_SIZE != 0) performs integer division that rounds up to find amount of blocks the ASCII will take.
     
     blocks[0].content.metaData->bitmap[pos] = 1; // mark as busy
     blocks[0].content.metaData->totalFreeBlocks--;
@@ -179,5 +181,31 @@ bool BlockHandler::freeDataBlock(int position) {
             break;
         }
     }    
+    return true;
+}
+
+bool BlockHandler::freeNodeBlock(int position)
+{
+    int asciiSize = this->blocks[position].content.node->asciiSize;
+    int blockAmnt = asciiSize/BLOCK_SIZE + (asciiSize/BLOCK_SIZE != 0);
+
+    if(blocks[position].type != BlockType::Node)
+    {
+        std::cout<<"Error: The requested block to delete isn't a node Block Type\n";
+        return false;
+    }
+
+    for (int i = 0; i < blockAmnt; i++)
+    {
+        this->freeDataBlock(this->blocks[position].content.node->asciiParts[i]);
+    }
+    
+    this->blocks[position].content.node->asciiSize = 0;
+    this->blocks[position].content.node->permissions = 0;
+    delete[] this->blocks[position].content.node->asciiParts;
+    this->blocks[position].type = BlockType::Empty;
+    
+    this->blocks[0].content.metaData->bitmap[position] = 0;
+
     return true;
 }

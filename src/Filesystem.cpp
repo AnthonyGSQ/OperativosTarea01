@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-
+#include <cstring>
 #include "Filesystem.hpp"
 
 Filesystem::Filesystem(string disk)
@@ -99,6 +99,124 @@ bool Filesystem::saveToFile()
 
 bool Filesystem::loadFromFile()
 {
-   // TODO: Implementar carga desde archivo
-   return false;
+   // Construir la ruta completa al disco virtual (carpeta ../discs/)
+   std::string fullPath = "../discs/" + std::string(files->getFilename());
+
+   // Abrir el archivo en modo binario
+   readDisk.open(fullPath, std::ios::binary);
+   if (!readDisk.is_open())
+   {
+      std::cout << "Error: no se pudo abrir " << fullPath << " para lectura.\n";
+      return false;
+   }
+
+   // Ir al final del archivo para calcular el tamaño total en bytes
+   readDisk.seekg(0, std::ios::end);
+   std::streampos fileSize = readDisk.tellg();
+
+   // Calcular cuántos bloques de 256 bytes hay en el archivo
+   int totalBlocksFromFile = fileSize / BLOCK_SIZE + (fileSize % BLOCK_SIZE != 0);
+
+   // Volver al inicio del archivo para empezar a leer
+   readDisk.seekg(0, std::ios::beg);
+
+   // Reinicializar el BlockHandler con la nueva cantidad de bloques
+   delete files;
+   files = new BlockHandler(files->getFilename(), totalBlocksFromFile);
+
+   // === Bucle principal de lectura, bloque por bloque ===
+   for (int i = 0; i < totalBlocksFromFile; ++i)
+   {
+      // Crear un buffer de 256 bytes para leer el bloque
+      char buffer[BLOCK_SIZE] = {0};
+      readDisk.read(buffer, BLOCK_SIZE);
+
+      // Verificar si la lectura fue exitosa
+      if (readDisk.fail())
+      {
+         std::cout << "Error al leer bloque " << i << ".\n";
+         readDisk.close();
+         return false;
+      }
+
+      // El primer byte del bloque indica el tipo (MetaData, Directory, Node, Data, Empty)
+      BlockType type = static_cast<BlockType>(buffer[0]);
+
+      // Clasificar el bloque según su tipo
+      switch (type)
+      {
+      // -------------------------------
+      case BlockType::MetaData:
+      {
+         MetaDataBlock meta;
+
+         // Copiar los primeros campos del bloque de metadatos
+         memcpy(&meta.totalBlocks, buffer + 1, sizeof(int));
+         memcpy(&meta.blockSize, buffer + 5, sizeof(int));
+         memcpy(&meta.totalFreeBlocks, buffer + 9, sizeof(int));
+
+         // Copiar el bitmap (array de ints que indica bloques libres/ocupados)
+         meta.bitmap = new int[meta.totalBlocks];
+         memcpy(meta.bitmap, buffer + 13, sizeof(int) * meta.totalBlocks);
+
+         // Guardar el bloque de metadatos en el BlockHandler
+         files->setMetaDataBlock();
+         break;
+      }
+
+      // -------------------------------
+      case BlockType::Directory:
+      {
+         DirectoryBlock dir;
+
+         // Copiar la cantidad de entradas de directorio
+         memcpy(&dir.entryCount, buffer + 1, sizeof(int));
+
+         // Guardar el bloque de directorio en el BlockHandler
+         files->setDirectoryBlock();
+         break;
+      }
+
+      // -------------------------------
+      case BlockType::Node:
+      {
+         NodeBlock node;
+
+         // Copiar tamaño del nombre, permisos, etc.
+         memcpy(&node.asciiSize, buffer + 1, sizeof(int));
+         memcpy(&node.permissions, buffer + 5, sizeof(int));
+
+         // Reservar memoria para las partes del nombre y copiarlas
+         node.asciiParts = new int[node.asciiSize];
+         memcpy(node.asciiParts, buffer + 9, sizeof(int) * node.asciiSize);
+
+         // Guardar el bloque nodo en el BlockHandler
+         files->setNodeBlock(node.asciiSize, node.permissions);
+         break;
+      }
+
+      // -------------------------------
+      case BlockType::Data:
+      {
+         DataBlock data;
+
+         // Copiar el contenido de datos (texto/binario), ignorando el primer byte (tipo)
+         data.content.assign(buffer + 1, BLOCK_SIZE - 1);
+
+         // Guardar el bloque de datos en el BlockHandler
+         files->setDataBlock(data.content.c_str(), data.content.size());
+         break;
+      }
+
+      // -------------------------------
+      case BlockType::Empty:
+      default:
+         // Si el bloque está vacío o no reconocido, no hacemos nada
+         break;
+      }
+   }
+
+   // Cerrar el archivo después de leer todo
+   readDisk.close();
+   return true;
 }

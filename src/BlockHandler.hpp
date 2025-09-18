@@ -5,39 +5,33 @@
 #include <array>
 #include "BlockStructures.hpp"
 
-class BlockHandler {
+class BlockHandler
+{
 private:
-    const char* filename;
+    const char *filename;
     int totalBlocks;
     // array with all the blocks of the file system
-    GenericalBlock* blocks;
+    GenericalBlock *blocks;
 
 public:
-    BlockHandler(const char* filename, int totalBlocks);
+    BlockHandler(const char *filename, int totalBlocks);
     ~BlockHandler();
 
     // setters to create all the type of blocks of the system
     int setMetaDataBlock();
     int setDirectoryBlock();
     int setNodeBlock(int asciiSize, int permissions);
-    int setDataBlock(const char* data, int dataSize);
+    int setDataBlock(const char *data, int dataSize);
 
     // get the block of a specific position;
-    GenericalBlock* getBlock(int position);
+    GenericalBlock *getBlock(int position);
 
     // function to read all the data from a specific block
-    int* getBlockData(int position);
+    int *getBlockData(int position);
     // function that returns the first free block finded in the bitmap
     int findEmptyBlockPosition();
     // function that returns the bitmap size
     int getTotalBlocks() const { return totalBlocks; }
-
-    // this function saves the current status of the file system in a .dat file
-    bool saveToFile();
-
-    // this function allows the system to return to the status saved in the .dat
-    // file
-    bool loadFromFile();
 
     // print all the type blocks in order
     void printAllBlocks();

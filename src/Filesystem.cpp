@@ -6,17 +6,16 @@
 
 Filesystem::Filesystem(string disk)
 {
-   //TODO: Constructor that opens an existing disk file
+   // TODO: Constructor that opens an existing disk file
 }
 
 Filesystem::Filesystem(string path, int size)
 {
    this->files = new BlockHandler(path.c_str(), size);
-   if(this->files == nullptr)
+   if (this->files == nullptr)
    {
       throw std::runtime_error("Error at Filesystem::Filesystem(string, int)");
    }
-   
 }
 
 Filesystem::~Filesystem()
@@ -39,19 +38,18 @@ int Filesystem::createFile(string pName, string pContent)
       throw std::runtime_error("Filesystem::CreateFile(string, string) failed when creating Node Block");
       return pos;
    }
-   
-   blockAmnt = pContent.size()/BLOCK_SIZE + (pContent.size()%BLOCK_SIZE != 0);
+
+   blockAmnt = pContent.size() / BLOCK_SIZE + (pContent.size() % BLOCK_SIZE != 0);
    int dataPos;
-   
+
    for (int i = 0; i < blockAmnt; i++)
    {
-      blockString = pContent.substr(i*BLOCK_SIZE, BLOCK_SIZE);
+      blockString = pContent.substr(i * BLOCK_SIZE, BLOCK_SIZE);
       dataPos = this->files->setDataBlock(blockString.c_str(), blockString.size());
       this->files->getBlock(pos)->content.node->asciiParts[i] = dataPos;
    }
-   
+
    return ++blockAmnt;
-   
 }
 
 int Filesystem::deleteFile(string pName)
@@ -60,8 +58,7 @@ int Filesystem::deleteFile(string pName)
 
    pos = this->files->getBlock(1)->content.directory->directoryMap[pName];
 
-   
-   if((this->files->freeNodeBlock(pos)) == false)
+   if ((this->files->freeNodeBlock(pos)) == false)
    {
       throw std::runtime_error("Filesystem::deleteFile(string) could not delete file.");
    }
@@ -81,7 +78,7 @@ void Filesystem::print(string pName)
 
    int fileSize = this->files->getBlock(index)->content.node->asciiSize;
 
-   fileSize = fileSize/BLOCK_SIZE + (fileSize%BLOCK_SIZE != 0);
+   fileSize = fileSize / BLOCK_SIZE + (fileSize % BLOCK_SIZE != 0);
 
    int dataPos;
    for (int i = 0; i < fileSize; i++)
@@ -91,6 +88,17 @@ void Filesystem::print(string pName)
       cout << this->files->getBlock(dataPos)->content.data->content;
    }
 
-   cout<<endl;
-   
+   cout << endl;
+}
+
+bool Filesystem::saveToFile()
+{
+   // TODO: Implementar guardado a archivo
+   return false;
+}
+
+bool Filesystem::loadFromFile()
+{
+   // TODO: Implementar carga desde archivo
+   return false;
 }

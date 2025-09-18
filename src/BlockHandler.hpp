@@ -40,6 +40,9 @@ public:
     // bitmap to show the bloc
     bool freeDataBlock(int position);
     bool freeNodeBlock(int position);
+
+    // function to get the filename of the disk
+    inline const char *getFilename() const { return filename; }
 };
 
 #endif

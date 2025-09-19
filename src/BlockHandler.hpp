@@ -4,17 +4,19 @@
 #include <string>
 #include <array>
 #include "BlockStructures.hpp"
+#include <ostream>
+#include <iostream>
 
 class BlockHandler
 {
 private:
-    const char *filename;
+    std::string filename;
     int totalBlocks;
     // array with all the blocks of the file system
     GenericalBlock *blocks;
 
 public:
-    BlockHandler(const char *filename, int totalBlocks);
+    BlockHandler(const std::string& filename, int totalBlocks);
     ~BlockHandler();
 
     // setters to create all the type of blocks of the system
@@ -40,6 +42,15 @@ public:
     // bitmap to show the bloc
     bool freeDataBlock(int position);
     bool freeNodeBlock(int position);
+
+    // function to get the filename of the disk
+    inline const std::string& getFilename() const { return filename; }
+
+    void printMeta() {
+        std::cout << blocks[0].content.metaData->totalBlocks << std::endl;
+        std::cout << blocks[0].content.metaData->blockSize << std::endl;
+        std::cout << blocks[0].content.metaData->totalFreeBlocks << std::endl;
+    }
 };
 
 #endif

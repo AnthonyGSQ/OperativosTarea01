@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iostream>
 
-BlockHandler::BlockHandler(const char *filename, int totalBlocks)
+BlockHandler::BlockHandler(const std::string& filename, int totalBlocks)
 {
     this->filename = filename;
     this->totalBlocks = totalBlocks;
@@ -100,18 +100,20 @@ int BlockHandler::setMetaDataBlock()
 
 int BlockHandler::setDirectoryBlock()
 {
-    int pos = findEmptyBlockPosition();
-    if (pos == -1)
-        return -1;
+    int pos = -1;
+    if (totalBlocks > 0) {
+        pos = findEmptyBlockPosition();
+        if (pos == -1)
+            return -1;
 
-    blocks[pos].type = BlockType::Directory;
-    blocks[pos].content.directory = new DirectoryBlock();
-    blocks[pos].content.directory->entryCount = 0;
+        blocks[pos].type = BlockType::Directory;
+        blocks[pos].content.directory = new DirectoryBlock();
+        blocks[pos].content.directory->entryCount = 0;
 
-    // mark the current position in the bitmap as busy
-    blocks[0].content.metaData->bitmap[pos] = 1;
-    blocks[0].content.metaData->totalFreeBlocks--;
-
+        // mark the current position in the bitmap as busy
+        blocks[0].content.metaData->bitmap[pos] = 1;
+        blocks[0].content.metaData->totalFreeBlocks--;
+    }
     return pos;
 }
 

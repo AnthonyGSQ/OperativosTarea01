@@ -65,4 +65,6 @@ public:
    // this function allows the system to return to the status saved in the .dat
    // file
    bool loadFromFile();
+
+   BlockHandler *getBlockHandler() { return files; }
 };

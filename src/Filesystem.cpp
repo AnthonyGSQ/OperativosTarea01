@@ -8,6 +8,11 @@
 Filesystem::Filesystem(string disk)
 {
    // TODO: Constructor that opens an existing disk file
+   this->files = new BlockHandler(disk.c_str(), 0);
+   if (this->files == nullptr)
+   {
+      throw std::runtime_error("Error at Filesystem::Filesystem(string)");
+   }
 }
 
 Filesystem::Filesystem(string path, int size)
@@ -95,7 +100,6 @@ void Filesystem::print(string pName)
 bool Filesystem::saveToFile()
 {
    // TODO: Implementar guardado a archivo
-   return false;
 
    writeDisk.open(this->files->getFilename(), std::ios::binary | std::ios::trunc);
    if (!writeDisk.is_open()) {
@@ -224,9 +228,11 @@ bool Filesystem::loadFromFile()
          readDisk.close();
          return false;
       }
-
+      size_t offset = 0;
       // El primer byte del bloque indica el tipo (MetaData, Directory, Node, Data, Empty)
-      BlockType type = static_cast<BlockType>(buffer[0]);
+      BlockType type;
+      memcpy(&type, buffer, sizeof(BlockType));
+      offset += sizeof(BlockType);
 
       // Clasificar el bloque según su tipo
       switch (type)
@@ -237,13 +243,16 @@ bool Filesystem::loadFromFile()
          MetaDataBlock meta;
          std::cout << "Tipo metaData\n";
          // Copiar los primeros campos del bloque de metadatos
-         memcpy(&meta.totalBlocks, buffer + 1, sizeof(int));
-         memcpy(&meta.blockSize, buffer + 5, sizeof(int));
-         memcpy(&meta.totalFreeBlocks, buffer + 9, sizeof(int));
+         memcpy(&meta.totalBlocks, buffer + offset, sizeof(int));
+         offset += sizeof(int);
+         memcpy(&meta.blockSize, buffer + offset, sizeof(int));
+         offset += sizeof(int);
+         memcpy(&meta.totalFreeBlocks, buffer + offset, sizeof(int));
+         offset += sizeof(int);
 
          // Copiar el bitmap (array de ints que indica bloques libres/ocupados)
          meta.bitmap = new int[meta.totalBlocks];
-         memcpy(meta.bitmap, buffer + 13, sizeof(int) * meta.totalBlocks);
+         memcpy(meta.bitmap, buffer + offset, sizeof(int) * meta.totalBlocks);
 
          // Guardar el bloque de metadatos en el BlockHandler
          files->setMetaDataBlock();
@@ -255,10 +264,32 @@ bool Filesystem::loadFromFile()
       {
          DirectoryBlock dir;
          std::cout << "Tipo Directory\n";
-
          // Copiar la cantidad de entradas de directorio
-         memcpy(&dir.entryCount, buffer + 1, sizeof(int));
-
+         memcpy(&dir.entryCount, buffer + offset, sizeof(int));
+         // Leer entryCount
+         int entryCount;
+         memcpy(&entryCount, buffer + offset, sizeof(int));
+         offset += sizeof(int);
+         // Leer mapSize
+         int mapSize;
+         memcpy(&mapSize, buffer + offset, sizeof(int));
+         offset += sizeof(int);
+         // Leer cada entrada del mapa
+         for (int i = 0; i < mapSize; ++i) {
+             // Leer tamaño del nombre
+             int nameLen;
+             memcpy(&nameLen, buffer + offset, sizeof(int));
+             offset += sizeof(int);
+             // Leer nombre
+             std::string name(buffer + offset, nameLen);
+             offset += nameLen;
+             // Leer posición (int)
+             int pos;
+             memcpy(&pos, buffer + offset, sizeof(int));
+             offset += sizeof(int);
+             // Guardar en el mapa
+             dir.directoryMap[name] = pos;
+         }
          // Guardar el bloque de directorio en el BlockHandler
          files->setDirectoryBlock();
          break;
@@ -270,12 +301,18 @@ bool Filesystem::loadFromFile()
          NodeBlock node;
          std::cout << "Tipo NodeBlock\n";
          // Copiar tamaño del nombre, permisos, etc.
-         memcpy(&node.asciiSize, buffer + 1, sizeof(int));
-         memcpy(&node.permissions, buffer + 5, sizeof(int));
+         memcpy(&node.asciiSize, buffer + offset, sizeof(int));
+         offset += sizeof(int);
 
-         // Reservar memoria para las partes del nombre y copiarlas
-         node.asciiParts = new int[node.asciiSize];
-         memcpy(node.asciiParts, buffer + 9, sizeof(int) * node.asciiSize);
+         memcpy(&node.permissions, buffer + offset, sizeof(int));
+         offset += sizeof(int);
+
+         int partsCount = node.asciiSize / BLOCK_SIZE + (node.asciiSize % BLOCK_SIZE != 0);
+         node.asciiParts = new int[partsCount];
+         for (int j = 0; j < partsCount; ++j) {
+            memcpy(&node.asciiParts[j], buffer + offset, sizeof(int));
+            offset += sizeof(int);
+         }
 
          // Guardar el bloque nodo en el BlockHandler
          files->setNodeBlock(node.asciiSize, node.permissions);
@@ -287,8 +324,8 @@ bool Filesystem::loadFromFile()
       {
          DataBlock data;
          std::cout << "Tipo Datablock\n";
-         // Copiar el contenido de datos (texto/binario), ignorando el primer byte (tipo)
-         data.content.assign(buffer + 1, BLOCK_SIZE - 1);
+         // Copiar el contenido de datos (texto/binario)
+         data.content.assign(buffer + offset, BLOCK_SIZE);
 
          // Guardar el bloque de datos en el BlockHandler
          files->setDataBlock(data.content.c_str(), data.content.size());

@@ -2,7 +2,7 @@
 #include <cstring>
 #include <iostream>
 
-BlockHandler::BlockHandler(const char *filename, int totalBlocks)
+BlockHandler::BlockHandler(const std::string& filename, int totalBlocks)
 {
     this->filename = filename;
     this->totalBlocks = totalBlocks;

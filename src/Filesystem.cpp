@@ -184,8 +184,9 @@ bool Filesystem::saveToFile()
 
 bool Filesystem::loadFromFile()
 {
+
    // Construir la ruta completa al disco virtual (carpeta ../discs/)
-   std::string fullPath = "../discs/" + std::string(files->getFilename());
+   std::string fullPath = std::string(files->getFilename());
 
    // Abrir el archivo en modo binario
    readDisk.open(fullPath, std::ios::binary);
@@ -234,7 +235,7 @@ bool Filesystem::loadFromFile()
       case BlockType::MetaData:
       {
          MetaDataBlock meta;
-
+         std::cout << "Tipo metaData\n";
          // Copiar los primeros campos del bloque de metadatos
          memcpy(&meta.totalBlocks, buffer + 1, sizeof(int));
          memcpy(&meta.blockSize, buffer + 5, sizeof(int));
@@ -253,6 +254,7 @@ bool Filesystem::loadFromFile()
       case BlockType::Directory:
       {
          DirectoryBlock dir;
+         std::cout << "Tipo Directory\n";
 
          // Copiar la cantidad de entradas de directorio
          memcpy(&dir.entryCount, buffer + 1, sizeof(int));
@@ -266,7 +268,7 @@ bool Filesystem::loadFromFile()
       case BlockType::Node:
       {
          NodeBlock node;
-
+         std::cout << "Tipo NodeBlock\n";
          // Copiar tamaño del nombre, permisos, etc.
          memcpy(&node.asciiSize, buffer + 1, sizeof(int));
          memcpy(&node.permissions, buffer + 5, sizeof(int));
@@ -284,7 +286,7 @@ bool Filesystem::loadFromFile()
       case BlockType::Data:
       {
          DataBlock data;
-
+         std::cout << "Tipo Datablock\n";
          // Copiar el contenido de datos (texto/binario), ignorando el primer byte (tipo)
          data.content.assign(buffer + 1, BLOCK_SIZE - 1);
 
@@ -296,6 +298,8 @@ bool Filesystem::loadFromFile()
       // -------------------------------
       case BlockType::Empty:
       default:
+         std::cout << "Tipo vacio\n";
+
          // Si el bloque está vacío o no reconocido, no hacemos nada
          break;
       }

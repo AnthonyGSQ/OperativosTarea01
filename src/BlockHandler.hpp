@@ -8,13 +8,13 @@
 class BlockHandler
 {
 private:
-    const char *filename;
+    std::string filename;
     int totalBlocks;
     // array with all the blocks of the file system
     GenericalBlock *blocks;
 
 public:
-    BlockHandler(const char *filename, int totalBlocks);
+    BlockHandler(const std::string& filename, int totalBlocks);
     ~BlockHandler();
 
     // setters to create all the type of blocks of the system
@@ -42,7 +42,7 @@ public:
     bool freeNodeBlock(int position);
 
     // function to get the filename of the disk
-    inline const char *getFilename() const { return filename; }
+    inline const std::string& getFilename() const { return filename; }
 };
 
 #endif

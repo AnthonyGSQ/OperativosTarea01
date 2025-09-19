@@ -1,5 +1,13 @@
 # Tarea01 Sistema de archivos indexados para dibujos ascii
 
+## Integrantes
+
+### Carlos A. Obando López C35655
+### Geiner Montoya Barrientos C25063
+### Andres Camacho C01544
+### Anthony Sanchez C37331
+
+
 ## Preguntas a responder
 
 ### 1. ¿Cuáles serían los metadatos del filesystem?

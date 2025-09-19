@@ -4,6 +4,8 @@
 #include <string>
 #include <array>
 #include "BlockStructures.hpp"
+#include <ostream>
+#include <iostream>
 
 class BlockHandler
 {
@@ -43,6 +45,12 @@ public:
 
     // function to get the filename of the disk
     inline const std::string& getFilename() const { return filename; }
+
+    void printMeta() {
+        std::cout << blocks[0].content.metaData->totalBlocks << std::endl;
+        std::cout << blocks[0].content.metaData->blockSize << std::endl;
+        std::cout << blocks[0].content.metaData->totalFreeBlocks << std::endl;
+    }
 };
 
 #endif
